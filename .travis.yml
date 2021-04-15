@@ -13,7 +13,7 @@ addons:
   sonarcloud:
     organization: "pp-groupe-6" # the key of the org you chose at step #3
     token:
-      secure: ${{SONAR_TOKEN}} # encrypted value of your token
+      secure: "eO3TRcuxuSCrW9IPzZAHMXUhNxsXBgU94V+zUYD85jA4XzxkKj2uFMrK/CXIktxCJQhyaDyygwl0MuNVBBCYKnGgGqZjufQH6JnHoeEqkGdrwLVBjGUjQ6lZG0/3UXomIumiDIdB+SXhetT5JwrpPBFk423uO+ClID0fVN8/RbOUCRRuA9FY4UoOBn4jJktV6Wzy9I1dzRrLGJMy39JvVoJcITP0eNH7M/dxGANXxpD9AGW4E47JBenhUeQSiqQ2dfHslMcpcOadyppmvAqrRc4Fk38s8rMcszbdc5ETsIAIdaZUa+pHqhqCOcrjYhnKqSmsz0I3mw/YpQ8kBuYt00k3PVXHbwR2w42WmRzXDjOb5/UGyc45jbLJcIzy8RWBT8NEy3ruy4miPnCLtYRbDslAW9pf166mVbC2i/QDz5B4j9vBsUJPkmTXadN0OhjSuWj4rv5RBCNsAwgfhfnKFUDEh+jhgYD5AFB7JX0rhzyFdrvcVWkdiN26TI6AmPHasLM/lpdUf2FbGbr/ggLXdtWVF5lzjGfMJnNZegaewudrOp7NbVI5c3V3/KQEkChyrxpAbzDl/9q94aHKZLY3otYCIS4sm9bm6z8OlDXWs43LNdIzEFoEKJNZpnbg4XY1UoKSqdxxkjvgVPHPAeQu6fcosR5T4KoyEE/jR10Q1+o=" # encrypted value of your token
 
 script:
   # other script steps might be done before running the actual analysis
