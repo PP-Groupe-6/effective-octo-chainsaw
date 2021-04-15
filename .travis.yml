@@ -1,8 +1,19 @@
 language: go
 
+dist: xenial
+
 go:
 - 1.16
 
 os:
   - linux
   - windows
+
+addons:
+  sonarcloud:
+    organization: "pp-groupe-6" # the key of the org you chose at step #3
+    token: ${SONAR_TOKEN}
+    
+script:
+  # other script steps might be done before running the actual analysis
+  - sonar-scanner
