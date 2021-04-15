@@ -2,13 +2,7 @@ language: go
 
 go:
 - 1.16
-- master
 
 os:
   - linux
   - windows
-
-env:
-  global:
-    - GO111MODULE=on
-    - PATH=${TRAVIS_BUILD_DIR}/bin:${PATH}
