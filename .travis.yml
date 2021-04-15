@@ -4,6 +4,10 @@ go:
 - 1.16
 - master
 
+os:
+  - linux
+  - windows
+
 env:
   global:
     - GO111MODULE=on
