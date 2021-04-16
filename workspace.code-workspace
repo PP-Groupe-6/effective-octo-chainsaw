@@ -1,6 +1,10 @@
 {
 	"folders": [
 		{
+			"name": "Main module",
+			"path": "."
+		},
+		{
 			"name": "Account microservice",
 			"path": "./account_microservice"
 		},
