@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "Account microservice",
+			"path": "./account_microservice"
+		},
+		{
+			"name": "Transationc microservice",
+			"path": "./transaction_microservice"
+		}
+	],
+	"settings": {}
+}
