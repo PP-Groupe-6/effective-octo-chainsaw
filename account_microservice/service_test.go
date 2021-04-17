@@ -5,7 +5,12 @@ import (
 	"testing"
 )
 
-func TestAdd(t *testing.T) {
+type TestData struct {
+	s           AccountService
+	mockAccount Account
+}
+
+func NewTestData() TestData {
 	// Instance du service utilisée pour les tests
 	s := NewAccountService()
 
@@ -19,20 +24,29 @@ func TestAdd(t *testing.T) {
 		10000,
 	}
 
+	return TestData{
+		s,
+		mockAccount,
+	}
+}
+
+func TestAdd(t *testing.T) {
+	testData := NewTestData()
+
 	// Test avec un paramètre vide
-	_, err := s.Add(context.TODO(), Account{})
+	_, err := testData.s.Add(context.TODO(), Account{})
 
 	if err == nil {
 		t.Errorf("Passed empty account param to add function, should have raised an error")
 	}
 
 	// Test avec un compte valide
-	result, err := s.Add(context.TODO(), mockAccount)
+	result, err := testData.s.Add(context.TODO(), testData.mockAccount)
 	if err != nil {
 		t.Errorf("Valid account, method should not fail")
 	}
 
-	if result != mockAccount {
+	if result != testData.mockAccount {
 		t.Errorf("Returned account is not the same as the param")
 	}
 }
