@@ -10,9 +10,9 @@ os:
 
 addons:
   sonarcloud:
-    organization: "pp-groupe-6" # the key of the org you chose at step #3
+    organization: "pp-groupe-6"
     token: ${SONAR_TOKEN}
     
 script:
-  # other script steps might be done before running the actual analysis
+  - go test -v ./
   - sonar-scanner
