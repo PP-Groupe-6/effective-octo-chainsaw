@@ -14,5 +14,6 @@ addons:
     token: ${SONAR_TOKEN}
     
 script:
-  - go test -v ./
+  - go test -v ./account_microservice
+  - go test -v ./transaction_microservice
   - sonar-scanner
