@@ -11,6 +11,7 @@ type AccountService interface {
 	Add(ctx context.Context, account Account) (Account, error)
 	Update(ctx context.Context, id string, account Account) error
 	Delete(ctx context.Context, id string) error
+	GetAmountForID(ctx context.Context, id string) (float32, error)
 }
 
 // Structure représentant l'instance du service
@@ -46,4 +47,8 @@ func (s *accountService) Update(ctx context.Context, id string, account Account)
 
 func (s *accountService) Delete(ctx context.Context, id string) error {
 	return nil
+}
+
+func (s *accountService) GetAmountForID(ctx context.Context, id string) (float32, error) {
+	return 0, nil
 }

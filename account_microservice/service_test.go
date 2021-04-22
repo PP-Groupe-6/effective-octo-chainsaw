@@ -154,3 +154,26 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Passed existing ID, should not raise an error")
 	}
 }
+
+func TestGetAmountForID(t *testing.T) {
+	testData := NewTestData()
+
+	// Cas avec un ID vide
+	_, errEmptyID := testData.s.GetAmountForID(context.TODO(), "")
+	if errEmptyID == nil {
+		t.Errorf("Passed empty ID as param, should have failed")
+	}
+
+	// Cas avec un ID invalide
+	_, errInvalidID := testData.s.GetAmountForID(context.TODO(), "sjdhfbviujas")
+	if errInvalidID == nil {
+		t.Errorf("Passed wrong ID, should raise an error")
+	}
+
+	// Cas avec un ID valide
+	_, err := testData.s.GetAmountForID(context.TODO(), testData.mockAccount.ClientID)
+	if err != nil {
+		t.Errorf("Passed existing ID, should not raise an error")
+	}
+
+}
