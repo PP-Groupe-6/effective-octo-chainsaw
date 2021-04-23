@@ -11,7 +11,7 @@ then
   sudo apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::="--force-confnew" install postgresql-$PGVERSION postgresql-server-dev-$PGVERSION postgresql-contrib-$PGVERSION
   sudo chmod 777 /etc/postgresql/$PGVERSION/main/pg_hba.conf
   echo "local     all         postgres                          trust"    >  /etc/postgresql/$PGVERSION/main/pg_hba.conf
-  echo "local     all         dev             127.0.0.1/32      trust"    >  /etc/postgresql/$PGVERSION/main/pg_hba.conf
+  echo "local     all         dev                               trust"    >  /etc/postgresql/$PGVERSION/main/pg_hba.conf
   echo "local     all         all                               trust"    >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   echo "host      replication pgx_replication 127.0.0.1/32      md5"      >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   echo "host      pgx_test    pgx_replication 127.0.0.1/32      md5"      >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
