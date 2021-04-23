@@ -12,6 +12,7 @@ then
   sudo chmod 777 /etc/postgresql/$PGVERSION/main/pg_hba.conf
   echo "local     all         postgres                          trust"    >  /etc/postgresql/$PGVERSION/main/pg_hba.conf
   echo "local     all         dev                               trust"    >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
+  echo "local     prix_banque_test         dev                               trust"    >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   echo "local     all         all                               trust"    >> /etc/postgresql/$PGVERSION/main/pg_hba.conf
   sudo chmod 777 /etc/postgresql/$PGVERSION/main/postgresql.conf
   if $(dpkg --compare-versions $PGVERSION ge 9.6) ; then
