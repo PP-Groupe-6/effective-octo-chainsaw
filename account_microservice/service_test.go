@@ -84,7 +84,7 @@ func TestGetAccountByID(t *testing.T) {
 	// Test avec un id valide
 	result, err := testData.s.GetAccountByID(context.TODO(), testData.mockAccount.ClientID)
 	if err != nil {
-		t.Errorf("Valid account, method should not fail : " + err.Error())
+		t.Errorf("Valid ID, method should not fail : " + err.Error())
 	}
 
 	if result != testData.mockAccount {
@@ -129,7 +129,7 @@ func TestUpdate(t *testing.T) {
 	// Test avec un fonctionnement valide
 	err := testData.s.Update(context.TODO(), testData.mockAccount.ClientID, testData.otherAccount)
 	if err != nil {
-		t.Errorf("Valid account, method should not fail")
+		t.Errorf("Valid account and ID, method should not fail")
 	}
 
 	dbResult, err := testData.s.GetAccountByID(context.TODO(), testData.mockAccount.ClientID)
