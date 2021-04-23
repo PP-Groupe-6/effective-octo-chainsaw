@@ -12,8 +12,16 @@ type TestData struct {
 }
 
 func NewTestData() TestData {
+	info := dbConnexionInfo{
+		"postgre://",
+		"5432",
+		"PrixBanqueDev",
+		"dev",
+		"dev",
+	}
+
 	// Instance du service utilisée pour les tests
-	s := NewAccountService()
+	s := NewAccountService(info)
 
 	// Compte mocké
 	mockAccount := Account{
@@ -55,11 +63,11 @@ func TestAdd(t *testing.T) {
 	// Test avec un compte valide
 	result, err := testData.s.Add(context.TODO(), testData.mockAccount)
 	if err != nil {
-		t.Errorf("Valid account, method should not fail")
+		t.Errorf("Valid account, method should not fail : " + err.Error())
 	}
 
 	if result != testData.mockAccount {
-		t.Errorf("Returned account is not the same as the param")
+		t.Errorf("Returned account is not the same as the param expected : " + testData.mockAccount.ClientID + " got : " + result.ClientID)
 	}
 }
 
@@ -76,11 +84,17 @@ func TestGetAccountByID(t *testing.T) {
 	// Test avec un id valide
 	result, err := testData.s.GetAccountByID(context.TODO(), testData.mockAccount.ClientID)
 	if err != nil {
-		t.Errorf("Valid account, method should not fail")
+		t.Errorf("Valid account, method should not fail : " + err.Error())
 	}
 
 	if result != testData.mockAccount {
 		t.Errorf("Returned account is not the same as the on specified")
+	}
+
+	// Test avec un id deja existant
+	result, err = testData.s.GetAccountByID(context.TODO(), testData.mockAccount.ClientID)
+	if err != nil && err != ErrAlreadyExistingID {
+		t.Errorf("Valid account, method should not fail : " + err.Error())
 	}
 }
 
