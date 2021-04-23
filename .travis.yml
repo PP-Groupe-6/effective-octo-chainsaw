@@ -5,6 +5,9 @@ dist: xenial
 go:
 - 1.16
 
+before_install:
+  - ./travis/before_install.bash
+
 os:
   - linux
 
@@ -13,6 +16,9 @@ addons:
     organization: "pp-groupe-6"
     token: ${SONAR_TOKEN}
     
+before_script:
+  - ./travis/before_script.bash
+
 script:
   - go test -v ./account_microservice
   - go test -v ./transaction_microservice
