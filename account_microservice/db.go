@@ -16,7 +16,7 @@ type dbConnexionInfo struct {
 }
 
 func GetDbConnexion(info dbConnexionInfo) *sqlx.DB {
-	db, err := sqlx.Connect("postgres", "user="+info.username+" password="+info.password+" dbname="+info.dbName+" sslmode=disable")
+	db, err := sqlx.Connect("postgres", "port="+info.dbPort+"user="+info.username+" password="+info.password+" dbname="+info.dbName+" sslmode=disable")
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -9,7 +9,7 @@
 			"path": "./account_microservice"
 		},
 		{
-			"name": "Transationc microservice",
+			"name": "Transaction microservice",
 			"path": "./transaction_microservice"
 		}
 	],
