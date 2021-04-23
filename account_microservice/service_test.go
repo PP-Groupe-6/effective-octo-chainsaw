@@ -14,8 +14,8 @@ type TestData struct {
 func NewTestData() TestData {
 	info := dbConnexionInfo{
 		"postgre://",
-		"6543",
-		"PrixBanqueDev",
+		"5432",
+		"prix_banque_test",
 		"dev",
 		"dev",
 	}
