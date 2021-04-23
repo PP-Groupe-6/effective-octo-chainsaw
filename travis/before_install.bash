@@ -11,6 +11,7 @@ then
   sudo apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::="--force-confnew" install postgresql-$PGVERSION postgresql-server-dev-$PGVERSION postgresql-contrib-$PGVERSION
   sudo chmod 777 /etc/postgresql/$PGVERSION/main/pg_hba.conf
   echo "local   all             all                                     trust"    >  /etc/postgresql/$PGVERSION/main/pg_hba.conf
+  echo "local   all             all                                     password"    >  /etc/postgresql/$PGVERSION/main/pg_hba.conf
   sudo chmod 777 /etc/postgresql/$PGVERSION/main/postgresql.conf
   if $(dpkg --compare-versions $PGVERSION ge 9.6) ; then
     echo "wal_level='logical'"     >> /etc/postgresql/$PGVERSION/main/postgresql.conf
