@@ -14,10 +14,10 @@ os:
 env:
   global:
     - GO111MODULE=off
-    - PGX_PRIXBANQUE_DATABASE=postgres://postgres:@127.0.0.1/PrixBanqueDev
-    - DEV_PRIXBANQUE_DATABASE_CONNSTRING="postgres://dev:dev@127.0.0.1:5432/PrixBanqueDev"
+    - PGX_PRIXBANQUE_DATABASE=postgres://postgres:@127.0.0.1/prix_banque_test
+    - DEV_PRIXBANQUE_DATABASE_CONNSTRING="postgres://dev:dev@127.0.0.1:5432/prix_banque_test"
   matrix:
-    - PGVERSION=13 PRIXBANQUE_DEV_CONNSTRING="host=127.0.0.1 port=5432 user=dev password=dev database=PrixbanqueDev"
+    - PGVERSION=13 PRIXBANQUE_DEV_CONNSTRING="host=127.0.0.1 port=5432 user=dev password=dev database=prix_banque_test"
 
 addons:
   sonarcloud:
