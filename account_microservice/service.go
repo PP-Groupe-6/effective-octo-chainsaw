@@ -23,11 +23,11 @@ type accountService struct {
 // Déclaration des différentes erreurs de la couche service
 var (
 	ErrNotAnId           = errors.New("not an ID")
-	ErrNoAccount         = errors.New("Account param is empty")
-	ErrNotFound          = errors.New("post not found")
+	ErrNoAccount         = errors.New("account param is empty")
+	ErrNotFound          = errors.New("account not found not found")
 	ErrNoDb              = errors.New("could not access database")
 	ErrInconsistentIDs   = errors.New("inconsistent IDs during account update")
-	ErrNoInsert          = errors.New("Insert did not go through")
+	ErrNoInsert          = errors.New("insert did not go through")
 	ErrAlreadyExistingID = errors.New("ID already exists in db")
 )
 
