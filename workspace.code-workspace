@@ -11,6 +11,10 @@
 		{
 			"name": "Transfer microservice",
 			"path": "./transfer_microservice"
+		},
+		{
+			"name": "Invoice microservice",
+			"path": "./invoice_microservice"
 		}
 	],
 	"settings": {}

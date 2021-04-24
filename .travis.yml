@@ -16,4 +16,5 @@ addons:
 script:
   - go test -v ./account_microservice
   - go test -v ./transfer_microservice
+  - go test -v ./invoice_microservice
   - sonar-scanner

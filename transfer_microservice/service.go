@@ -28,23 +28,10 @@ type transferService struct {
 	DbInfos dbConnexionInfo
 }
 
-func NewTransactionservice(dbinfos dbConnexionInfo) TransferService {
+func NewTransactionService(dbinfos dbConnexionInfo) TransferService {
 	return &transferService{
 		DbInfos: dbinfos,
 	}
-}
-
-func (s *transferService) Read(ctx context.Context, id string) (Transfer, error) {
-	db := GetDbConnexion(s.DbInfos)
-
-	res := Transfer{}
-	err := db.Get(&res, "SELECT * FROM transfert WHERE transfert_id=$1", id)
-
-	if err != nil {
-		return Transfer{}, err
-	}
-
-	return res, nil
 }
 
 func (s *transferService) Create(ctx context.Context, transfer Transfer) (Transfer, error) {
@@ -73,24 +60,17 @@ func (s *transferService) Create(ctx context.Context, transfer Transfer) (Transf
 
 }
 
-func (s *transferService) Delete(ctx context.Context, id string) error {
-
-	if testID, _ := s.Read(ctx, id); (testID == Transfer{}) {
-		return ErrNotFound
-	}
+func (s *transferService) Read(ctx context.Context, id string) (Transfer, error) {
 	db := GetDbConnexion(s.DbInfos)
-	tx := db.MustBegin()
-	res := tx.MustExec("DELETE FROM transfert WHERE transfert_id=$1", id)
 
-	if nRows, err := res.RowsAffected(); nRows != 1 || err != nil {
-		if err != nil {
-			return err
-		}
+	res := Transfer{}
+	err := db.Get(&res, "SELECT * FROM transfert WHERE transfert_id=$1", id)
+
+	if err != nil {
+		return Transfer{}, err
 	}
-	tx.Commit()
-	db.Close()
 
-	return nil
+	return res, nil
 }
 
 func (s *transferService) Update(ctx context.Context, id string, transfer Transfer) (Transfer, error) {
@@ -116,4 +96,24 @@ func (s *transferService) Update(ctx context.Context, id string, transfer Transf
 	}
 
 	return s.Read(ctx, transfer.ID)
+}
+
+func (s *transferService) Delete(ctx context.Context, id string) error {
+
+	if testID, _ := s.Read(ctx, id); (testID == Transfer{}) {
+		return ErrNotFound
+	}
+	db := GetDbConnexion(s.DbInfos)
+	tx := db.MustBegin()
+	res := tx.MustExec("DELETE FROM transfert WHERE transfert_id=$1", id)
+
+	if nRows, err := res.RowsAffected(); nRows != 1 || err != nil {
+		if err != nil {
+			return err
+		}
+	}
+	tx.Commit()
+	db.Close()
+
+	return nil
 }
