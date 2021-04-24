@@ -12,7 +12,7 @@ type AccountService interface {
 	Add(ctx context.Context, account Account) (Account, error)
 	Update(ctx context.Context, id string, account Account) error
 	Delete(ctx context.Context, id string) error
-	GetAmountForID(ctx context.Context, id string) (float32, error)
+	GetAmountForID(ctx context.Context, id string) (float64, error)
 }
 
 // Structure représentant l'instance du service
@@ -129,6 +129,19 @@ func (s *accountService) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *accountService) GetAmountForID(ctx context.Context, id string) (float32, error) {
-	return 0, nil
+func (s *accountService) GetAmountForID(ctx context.Context, id string) (float64, error) {
+	if id == "" {
+		return 0, ErrNotAnId
+	}
+
+	if testID, _ := s.GetAccountByID(ctx, id); (testID == Account{}) {
+		return 0, ErrNotAnId
+	}
+	acc, err := s.GetAccountByID(ctx, id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return acc.AccountAmount, nil
 }
