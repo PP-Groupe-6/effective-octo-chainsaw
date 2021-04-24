@@ -84,6 +84,7 @@ INSERT INTO "transfer" VALUES (
 	'fErnq0RHXlGBI6DuQ88O3T6BCIizTwgt1YtNte1lAUE1uqoJOVDxHUihPSTTf57GVORuB8XFT1f8lUASGP8p0Fzj69wGDOv1tzsnwSlHbPp4M2fggbiNItk0w10E7Ro3sZ0V77osOzXU43pLHZ53gFLDOrG8NVzUTr0FM33ySDa5f53KTJ7AUfTujnbiVwiwIWWCS10YBOKcMqGvJ5s48AkThnzqfSCIRM2Omh0xeJvn4RSYSROfsi8ol3iqbPa',
 	'Ça va, tout va bien ?',
 	'Oui',
+	null,
 	null
 );
 
@@ -95,5 +96,6 @@ INSERT INTO "transfer" VALUES (
 	'sIowRDsqanK3vj0jfRVn1i8yLrmJfu93qDDlZwkeHFl4td0W2czjJbutqwibI8iaQJ7skSHtLpWHUtfN7gFQ0f40e6J1Fie4LeuRrmLHkxfpr6bv5VOYpwGvDyoux7Zus0fw2R2IRWEr3CqKtrohdX8t9pf37I17WoSVFg83hrb18BoKD3h989i3I36GAjXGLyEWbj6RsD6lt5TEQOjwJEZDZTeBOUOq0fNOUFmEW47cEgQ2R4DvIj5AN2iPDsv',
 	'Ça va, tout va bien ?',
 	'NON',
-	'2021-04-29'
+	'2021-04-29',
+	null
 );

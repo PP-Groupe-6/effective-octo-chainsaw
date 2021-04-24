@@ -45,7 +45,7 @@ func (s *transferService) Create(ctx context.Context, transfer Transfer) (Transf
 
 	db := GetDbConnexion(s.DbInfos)
 	tx := db.MustBegin()
-	res := tx.MustExec("INSERT INTO transfer VALUES('" + transfer.ID + "','" + transfer.Type + "','" + fmt.Sprint(transfer.Amount) + "','" + transfer.AccountPayerId + "','" + transfer.AccountReceiverId + "','" + transfer.ReceiverQuestion + "','" + transfer.ReceiverAnswer + "','" + transfer.ScheduledDate + "')")
+	res := tx.MustExec("INSERT INTO transfer VALUES('" + transfer.ID + "','" + transfer.Type + "','" + fmt.Sprint(transfer.Amount) + "','" + transfer.AccountPayerId + "','" + transfer.AccountReceiverId + "','" + transfer.ReceiverQuestion + "','" + transfer.ReceiverAnswer + "','" + transfer.ScheduledDate + "','" + transfer.ExecutedDate + "')")
 	tx.Commit()
 	db.Close()
 
@@ -84,7 +84,7 @@ func (s *transferService) Update(ctx context.Context, id string, transfer Transf
 
 	db := GetDbConnexion(s.DbInfos)
 	tx := db.MustBegin()
-	res := tx.MustExec("UPDATE transfer SET transfer_type = '" + transfer.Type + "', transfer_amount ='" + fmt.Sprint(transfer.Amount) + "', account_transfer_payer_id = '" + transfer.AccountPayerId + "', account_transfer_receiver_id = '" + transfer.AccountReceiverId + "', receiver_question = '" + transfer.ReceiverQuestion + "', receiver_answer = '" + transfer.ReceiverAnswer + "', scheduled_transfer_date = '" + transfer.ScheduledDate + "' WHERE transfer_id=$1")
+	res := tx.MustExec("UPDATE transfer SET transfer_type = '" + transfer.Type + "', transfer_amount ='" + fmt.Sprint(transfer.Amount) + "', account_transfer_payer_id = '" + transfer.AccountPayerId + "', account_transfer_receiver_id = '" + transfer.AccountReceiverId + "', receiver_question = '" + transfer.ReceiverQuestion + "', receiver_answer = '" + transfer.ReceiverAnswer + "', scheduled_transfer_date = '" + transfer.ScheduledDate + "', executed_transfer_date = '" + transfer.ExecutedDate + "' WHERE transfer_id=$1")
 	tx.Commit()
 	db.Close()
 

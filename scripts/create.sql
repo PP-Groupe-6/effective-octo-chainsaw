@@ -22,6 +22,7 @@ CREATE TABLE "transfer" (
 	"receiver_question" varchar(255) NOT NULL,
 	"receiver_answer" varchar(255) NOT NULL,
 	"scheduled_transfer_date" DATE,
+	"executed_transfer_date" DATE,
 	CONSTRAINT "Transfer_pk" PRIMARY KEY ("transfer_id")
 ) WITH (
   OIDS=FALSE
