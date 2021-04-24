@@ -9,8 +9,8 @@
 			"path": "./account_microservice"
 		},
 		{
-			"name": "Transationc microservice",
-			"path": "./transaction_microservice"
+			"name": "Transfer microservice",
+			"path": "./transfer_microservice"
 		}
 	],
 	"settings": {}
