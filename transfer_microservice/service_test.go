@@ -30,7 +30,7 @@ func NewTestData() TestData {
 		"fErnq0RHXlGBI6DuQ88O3T6BCIizTwgt1YtNte1lAUE1uqoJOVDxHUihPSTTf57GVORuB8XFT1f8lUASGP8p0Fzj69wGDOv1tzsnwSlHbPp4M2fggbiNItk0w10E7Ro3sZ0V77osOzXU43pLHZ53gFLDOrG8NVzUTr0FM33ySDa5f53KTJ7AUfTujnbiVwiwIWWCS10YBOKcMqGvJ5s48AkThnzqfSCIRM2Omh0xeJvn4RSYSROfsi8ol3iqbPa",
 		"Ça va, tout va bien ?",
 		"Oui",
-		"2021 - 04 - 29",
+		"2021-04-29",
 		"",
 	}
 
