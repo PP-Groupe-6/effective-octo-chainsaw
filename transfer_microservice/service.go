@@ -45,7 +45,7 @@ func (s *transferService) Create(ctx context.Context, transfer Transfer) (Transf
 
 	db := GetDbConnexion(s.DbInfos)
 	tx := db.MustBegin()
-	res := tx.MustExec("INSERT INTO transfert VALUES('" + transfer.ID + "','" + transfer.Type + "','" + fmt.Sprint(transfer.Amount) + "','" + transfer.AccountPayerId + "','" + transfer.AccountReceiverId + "','" + transfer.ReceiverQuestion + "','" + transfer.ReceiverAnswer + "','" + transfer.ScheduledDate + "')")
+	res := tx.MustExec("INSERT INTO transfer VALUES('" + transfer.ID + "','" + transfer.Type + "','" + fmt.Sprint(transfer.Amount) + "','" + transfer.AccountPayerId + "','" + transfer.AccountReceiverId + "','" + transfer.ReceiverQuestion + "','" + transfer.ReceiverAnswer + "','" + transfer.ScheduledDate + "')")
 	tx.Commit()
 	db.Close()
 
@@ -64,7 +64,7 @@ func (s *transferService) Read(ctx context.Context, id string) (Transfer, error)
 	db := GetDbConnexion(s.DbInfos)
 
 	res := Transfer{}
-	err := db.Get(&res, "SELECT * FROM transfert WHERE transfert_id=$1", id)
+	err := db.Get(&res, "SELECT * FROM transfer WHERE transfer_id=$1", id)
 
 	if err != nil {
 		return Transfer{}, err
@@ -84,7 +84,7 @@ func (s *transferService) Update(ctx context.Context, id string, transfer Transf
 
 	db := GetDbConnexion(s.DbInfos)
 	tx := db.MustBegin()
-	res := tx.MustExec("UPDATE transfert SET transfert_type = '" + transfer.Type + "', transfer_amount ='" + fmt.Sprint(transfer.Amount) + "', account_transfert_payer_id = '" + transfer.AccountPayerId + "', account_transfert_receiver_id = '" + transfer.AccountReceiverId + "', receiver_question = '" + transfer.ReceiverQuestion + "', receiver_answer = '" + transfer.ReceiverAnswer + "', scheduled_transfert_date = '" + transfer.ScheduledDate + "' WHERE transfer_id=$1")
+	res := tx.MustExec("UPDATE transfer SET transfer_type = '" + transfer.Type + "', transfer_amount ='" + fmt.Sprint(transfer.Amount) + "', account_transfer_payer_id = '" + transfer.AccountPayerId + "', account_transfer_receiver_id = '" + transfer.AccountReceiverId + "', receiver_question = '" + transfer.ReceiverQuestion + "', receiver_answer = '" + transfer.ReceiverAnswer + "', scheduled_transfer_date = '" + transfer.ScheduledDate + "' WHERE transfer_id=$1")
 	tx.Commit()
 	db.Close()
 
@@ -105,7 +105,7 @@ func (s *transferService) Delete(ctx context.Context, id string) error {
 	}
 	db := GetDbConnexion(s.DbInfos)
 	tx := db.MustBegin()
-	res := tx.MustExec("DELETE FROM transfert WHERE transfert_id=$1", id)
+	res := tx.MustExec("DELETE FROM transfer WHERE transfer_id=$1", id)
 
 	if nRows, err := res.RowsAffected(); nRows != 1 || err != nil {
 		if err != nil {
