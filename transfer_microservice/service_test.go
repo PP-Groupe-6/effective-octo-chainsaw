@@ -31,7 +31,7 @@ func NewTestData() TestData {
 		"Ça va, tout va bien ?",
 		"Oui",
 		"2021-04-29",
-		"",
+		"null",
 	}
 
 	otherTransfer := Transfer{
@@ -42,8 +42,8 @@ func NewTestData() TestData {
 		"sIowRDsqanK3vj0jfRVn1i8yLrmJfu93qDDlZwkeHFl4td0W2czjJbutqwibI8iaQJ7skSHtLpWHUtfN7gFQ0f40e6J1Fie4LeuRrmLHkxfpr6bv5VOYpwGvDyoux7Zus0fw2R2IRWEr3CqKtrohdX8t9pf37I17WoSVFg83hrb18BoKD3h989i3I36GAjXGLyEWbj6RsD6lt5TEQOjwJEZDZTeBOUOq0fNOUFmEW47cEgQ2R4DvIj5AN2iPDsv",
 		"Ça va, tout va bien ?",
 		"NON",
-		"",
-		"",
+		"null",
+		"null",
 	}
 
 	return TestData{
