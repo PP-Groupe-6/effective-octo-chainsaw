@@ -29,14 +29,15 @@ type GetAmountRequest struct {
 }
 
 type GetAmountResponse struct {
-	AccountAmount float64 `json:"amount"`
+	AccountAmount float32 `json:"amount"`
 }
 
 func MakeGetAmountEndpoint(s AccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(GetAmountRequest)
 		amount, err := s.GetAmountForID(ctx, req.ClientID)
-		return GetAmountResponse{amount}, err
+
+		return GetAmountResponse{float32(amount)}, err
 	}
 }
 
