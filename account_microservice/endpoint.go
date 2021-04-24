@@ -54,8 +54,8 @@ func MakeGetUserInformationEndpoint(s AccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(GetUserInformationRequest)
 		account, err := s.GetAccountByID(ctx, req.ClientID)
-		formated_name := account.Surname + " " + account.Name
-		return GetUserInformationResponse{formated_name, account.MailAdress, account.PhoneNumber}, err
+		formatedName := account.Surname + " " + account.Name
+		return GetUserInformationResponse{formatedName, account.MailAdress, account.PhoneNumber}, err
 	}
 }
 
@@ -73,17 +73,17 @@ type AddResponse struct {
 func MakeAddEndpoint(s AccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(AddRequest)
-		sep_name := strings.Split(req.FullName, " ")
+		sepName := strings.Split(req.FullName, " ")
 		phone := strconv.Itoa(req.PhoneNumber)
-		to_add := Account{
+		toAdd := Account{
 			req.ClientID,
-			sep_name[0],
-			sep_name[1],
+			sepName[0],
+			sepName[1],
 			phone,
 			req.MailAdress,
 			0,
 		}
-		account, err := s.Add(ctx, to_add)
+		account, err := s.Add(ctx, toAdd)
 		if (err == nil && account != Account{}) {
 			return true, nil
 		} else {
