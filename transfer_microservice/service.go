@@ -39,13 +39,13 @@ func (s *transferService) Create(ctx context.Context, transfer Transfer) (Transf
 		return Transfer{}, ErrNoTransfer
 	}
 
-	if testID, _ := s.Read(ctx, transfer.transfer_id); (testID != Transfer{}) {
+	if testID, _ := s.Read(ctx, transfer.ID); (testID != Transfer{}) {
 		return Transfer{}, ErrAlreadyExist
 	}
 
 	db := GetDbConnexion(s.DbInfos)
 	tx := db.MustBegin()
-	res := tx.MustExec("INSERT INTO transfer VALUES ('" + transfer.transfer_id + "','" + transfer.Type + "'," + fmt.Sprint(transfer.Amount) + ",'" + transfer.AccountPayerId + "','" + transfer.AccountReceiverId + "','" + transfer.ReceiverQuestion + "','" + transfer.ReceiverAnswer + "','" + transfer.ScheduledDate + "','" + transfer.ExecutedDate + "')")
+	res := tx.MustExec("INSERT INTO transfer VALUES ('" + transfer.ID + "','" + transfer.Type + "'," + fmt.Sprint(transfer.Amount) + ",'" + transfer.AccountPayerId + "','" + transfer.AccountReceiverId + "','" + transfer.ReceiverQuestion + "','" + transfer.ReceiverAnswer + "','" + transfer.ScheduledDate + "','" + transfer.ExecutedDate + "')")
 	tx.Commit()
 	db.Close()
 
@@ -56,7 +56,7 @@ func (s *transferService) Create(ctx context.Context, transfer Transfer) (Transf
 		return Transfer{}, ErrNoInsert
 	}
 
-	return s.Read(ctx, transfer.transfer_id)
+	return s.Read(ctx, transfer.ID)
 
 }
 
@@ -95,7 +95,7 @@ func (s *transferService) Update(ctx context.Context, id string, transfer Transf
 		return Transfer{}, ErrNoInsert
 	}
 
-	return s.Read(ctx, transfer.transfer_id)
+	return s.Read(ctx, transfer.ID)
 }
 
 func (s *transferService) Delete(ctx context.Context, id string) error {
