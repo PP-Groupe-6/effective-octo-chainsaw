@@ -70,7 +70,7 @@ func TestCreate(t *testing.T) {
 	}
 
 	if result != testData.mockTransfer {
-		t.Errorf("Returned transfer is not the same as the one created : " + testData.mockTransfer.ID + "got : " + result.ID)
+		t.Errorf("Returned transfer is not the same as the one created : " + testData.mockTransfer.transfer_id + " got : " + result.transfer_id)
 	}
 }
 
@@ -83,7 +83,7 @@ func TestRead(t *testing.T) {
 		t.Errorf("Passed empty transfer id, should have raised an error")
 	}
 
-	result, err := testData.s.Read(context.TODO(), testData.mockTransfer.ID)
+	result, err := testData.s.Read(context.TODO(), testData.mockTransfer.transfer_id)
 
 	if err != nil {
 		t.Errorf("Valid ID, method should not fail : " + err.Error())
@@ -104,7 +104,7 @@ func TestUpdate(t *testing.T) {
 		t.Errorf("Passed empty id, should have raised an error")
 	}
 
-	_, errEmptyTransfer := testData.s.Update(context.TODO(), testData.mockTransfer.ID, Transfer{})
+	_, errEmptyTransfer := testData.s.Update(context.TODO(), testData.mockTransfer.transfer_id, Transfer{})
 
 	if errEmptyTransfer == nil {
 		t.Errorf("Passed empty transfer, should have raised an error")
@@ -120,12 +120,12 @@ func TestUpdate(t *testing.T) {
 		t.Error("Function should have raised an inconsistent IDs")
 	}
 
-	_, err := testData.s.Update(context.TODO(), testData.mockTransfer.ID, testData.otherTransfer)
+	_, err := testData.s.Update(context.TODO(), testData.mockTransfer.transfer_id, testData.otherTransfer)
 	if err != nil {
 		t.Errorf("Valid transfer ID, method should not have raised an error")
 	}
 
-	dbResult, err := testData.s.Read(context.TODO(), testData.mockTransfer.ID)
+	dbResult, err := testData.s.Read(context.TODO(), testData.mockTransfer.transfer_id)
 
 	if err != nil {
 		t.Errorf("Error during read")
@@ -153,7 +153,7 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Passed wrong ID, should have raised an error")
 	}
 
-	err := testData.s.Delete(context.TODO(), testData.mockTransfer.ID)
+	err := testData.s.Delete(context.TODO(), testData.mockTransfer.transfer_id)
 	if err != nil {
 		t.Errorf("Passed a valid ID, should not have raised an error")
 	}
