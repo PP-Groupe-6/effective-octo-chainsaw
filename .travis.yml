@@ -5,14 +5,28 @@ dist: xenial
 go:
 - 1.16
 
+before_install:
+  - ./travis/before_install.bash
+
 os:
   - linux
+
+env:
+  global:
+    - GO111MODULE=off
+    - PGX_PRIXBANQUE_DATABASE=postgres://postgres:@127.0.0.1:5432/prix_banque_test
+    - DEV_PRIXBANQUE_DATABASE_CONNSTRING="postgres://dev:dev@127.0.0.1:5432/prix_banque_test"
+  matrix:
+    - PGVERSION=13 PRIXBANQUE_DEV_CONNSTRING="host=127.0.0.1 port=5432 user=dev password=dev database=prix_banque_test"
 
 addons:
   sonarcloud:
     organization: "pp-groupe-6"
     token: ${SONAR_TOKEN}
     
+before_script:
+  - ./travis/before_script.bash
+
 script:
   - go test -v ./account_microservice
   - go test -v ./transaction_microservice
