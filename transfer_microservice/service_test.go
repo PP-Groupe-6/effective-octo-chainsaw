@@ -53,7 +53,7 @@ func NewTestData() TestData {
 	}
 }
 
-func testCreate(t *testing.T) {
+func TestCreate(t *testing.T) {
 	testData := NewTestData()
 
 	_, err := testData.s.Create(context.TODO(), Transfer{})
@@ -74,7 +74,7 @@ func testCreate(t *testing.T) {
 	}
 }
 
-func testRead(t *testing.T) {
+func TestRead(t *testing.T) {
 	testData := NewTestData()
 
 	_, err := testData.s.Read(context.TODO(), "")
@@ -95,7 +95,7 @@ func testRead(t *testing.T) {
 
 }
 
-func testUpdate(t *testing.T) {
+func TestUpdate(t *testing.T) {
 	testData := NewTestData()
 
 	_, errEmptyID := testData.s.Update(context.TODO(), "", testData.mockTransfer)
@@ -140,7 +140,7 @@ func testUpdate(t *testing.T) {
 	}
 }
 
-func testDelete(t *testing.T) {
+func TestDelete(t *testing.T) {
 	testData := NewTestData()
 
 	errEmptyID := testData.s.Delete(context.TODO(), "")
