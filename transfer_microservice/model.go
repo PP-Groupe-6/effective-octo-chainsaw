@@ -1,7 +1,7 @@
 package transfer_microservice
 
 type Transfer struct {
-	ID                string  `json:"transfer_id,omitempty", db="transfer_id"`
+	ID                string  `json:"transfer_id,omitempty"`
 	Type              string  `json:"transfer_type,omitempty"`
 	Amount            float64 `json:"transfer_amount,omitempty"`
 	AccountPayerId    string  `json:"transfer_payer_id,omitempty"`
