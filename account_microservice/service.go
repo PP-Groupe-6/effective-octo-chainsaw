@@ -111,6 +111,21 @@ func (s *accountService) Update(ctx context.Context, id string, account Account)
 }
 
 func (s *accountService) Delete(ctx context.Context, id string) error {
+	if id == "" {
+		return ErrNotAnId
+	}
+
+	if testID, _ := s.GetAccountByID(ctx, id); (testID == Account{}) {
+		return ErrNotAnId
+	}
+
+	db := GetDbConnexion(s.DbInfos)
+
+	tx := db.MustBegin()
+	tx.MustExec("DELETE FROM account WHERE client_id = '" + id + "'")
+	tx.Commit()
+	db.Close()
+
 	return nil
 }
 

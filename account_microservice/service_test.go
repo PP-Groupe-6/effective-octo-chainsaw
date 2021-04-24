@@ -173,6 +173,10 @@ func TestDelete(t *testing.T) {
 	if err != nil {
 		t.Errorf("Passed existing ID, should not raise an error")
 	}
+
+	if testID, _ := testData.s.GetAccountByID(context.TODO(), testData.mockAccount.ClientID); (testID != Account{}) {
+		t.Errorf("Account still in db after deletion")
+	}
 }
 
 func TestGetAmountForID(t *testing.T) {
