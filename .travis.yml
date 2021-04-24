@@ -6,7 +6,8 @@ go:
 - 1.16
 
 before_install:
-  - bash ./travis/before_install.sh
+  - chmod +x ./travis/before_install.bash
+  - ./travis/before_install.bash
 
 os:
   - linux
@@ -25,7 +26,8 @@ addons:
     token: ${SONAR_TOKEN}
 
 before_script:
-  - bash ./travis/before_script.sh
+  - chmod +x ./travis/before_script.bash
+  - ./travis/before_script.bash
 
 script:
   #- go test -v ./account_microservice
