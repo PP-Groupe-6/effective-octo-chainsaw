@@ -62,12 +62,18 @@ func TestAdd(t *testing.T) {
 
 	// Test avec un compte valide
 	result, err := testData.s.Add(context.TODO(), testData.mockAccount)
-	if err != nil {
+	if err != nil && err != ErrAlreadyExistingID {
 		t.Errorf("Valid account, method should not fail : " + err.Error())
 	}
 
-	if result != testData.mockAccount {
+	if result != testData.mockAccount && err != ErrAlreadyExistingID {
 		t.Errorf("Returned account is not the same as the param expected : " + testData.mockAccount.ClientID + " got : " + result.ClientID)
+	}
+
+	// Test avec un compte déjà existant
+	_, errAlreadyExists := testData.s.Add(context.TODO(), testData.mockAccount)
+	if errAlreadyExists != ErrAlreadyExistingID {
+		t.Errorf("Already existing account, method should fail with " + ErrAlreadyExistingID.Error())
 	}
 }
 

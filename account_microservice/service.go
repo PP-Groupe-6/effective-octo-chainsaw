@@ -86,6 +86,27 @@ func (s *accountService) Add(ctx context.Context, account Account) (Account, err
 }
 
 func (s *accountService) Update(ctx context.Context, id string, account Account) error {
+	if id != account.ClientID {
+		return ErrInconsistentIDs
+	}
+
+	if id == "" {
+		return ErrNotAnId
+	}
+
+	empty := Account{}
+
+	if account == empty {
+		return ErrNoAccount
+	}
+
+	db := GetDbConnexion(s.DbInfos)
+
+	tx := db.MustBegin()
+	tx.MustExec("UPDATE account SET name='" + account.Name + "',surname='" + account.Surname + "',phone_number='" + account.PhoneNumber + "',mail_adress='" + account.MailAdress + "',account_amount=" + fmt.Sprint(account.AccountAmount) + " WHERE client_id = '" + account.ClientID + "'")
+	tx.Commit()
+	db.Close()
+
 	return nil
 }
 
