@@ -35,15 +35,15 @@ type GetInvoiceListRequest struct {
 }
 
 type GetInvoiceListResponse struct {
-	invoices []InvoiceResponseFormat `json:"invoices"`
+	Invoices []InvoiceResponseFormat `json:"invoices"`
 }
 
 type InvoiceResponseFormat struct {
-	id           string  `json:"id"`
-	amount       float32 `json:"amount"`
-	state        string  `json:"state"`
-	expDate      string  `json:"expDate"`
-	withClientId string  `json:"withClientId"`
+	Id           string  `json:"id"`
+	Amount       float32 `json:"amount"`
+	State        string  `json:"state"`
+	ExpDate      string  `json:"expDate"`
+	WithClientId string  `json:"withClientId"`
 }
 
 func MakeGetInvoiceListEndpoint(s InvoiceService) endpoint.Endpoint {
@@ -80,21 +80,21 @@ func MakeGetInvoiceListEndpoint(s InvoiceService) endpoint.Endpoint {
 }
 
 type AddRequest struct {
-	uid         string  // Id du client créant la facture
-	emailClient string  // email du client payeur
-	amount      float32 // montant de la facture
-	expDate     string  // date d'expiration de la facture
+	Uid         string  // Id du client créant la facture
+	EmailClient string  // email du client payeur
+	Amount      float32 // montant de la facture
+	ExpDate     string  // date d'expiration de la facture
 }
 
 type AddResponse struct {
-	created bool `json:"created"`
+	Created bool `json:"created"`
 }
 
 func MakeAddEndpoint(s InvoiceService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(AddRequest)
 
-		id, err := s.GetIdFromMail(ctx, req.emailClient)
+		id, err := s.GetIdFromMail(ctx, req.EmailClient)
 
 		if err != nil {
 			return nil, err
@@ -102,11 +102,11 @@ func MakeAddEndpoint(s InvoiceService) endpoint.Endpoint {
 
 		i := Invoice{
 			"",
-			float64(req.amount),
+			float64(req.Amount),
 			PENDING,
-			req.expDate,
+			req.ExpDate,
 			id,
-			req.uid,
+			req.Uid,
 		}
 
 		_, err = s.Create(ctx, i)
@@ -120,25 +120,25 @@ func MakeAddEndpoint(s InvoiceService) endpoint.Endpoint {
 }
 
 type InvoicePaymentRequest struct {
-	iid string
+	Iid string
 }
 
 type InvoicePaymentResponse struct {
-	paid bool `json:"paid"`
+	Paid bool `json:"paid"`
 }
 
 func MakeInvoicePaymentEndpoint(s InvoiceService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(InvoicePaymentRequest)
 
-		paid, err := s.PayInvoice(ctx, req.iid)
+		paid, err := s.PayInvoice(ctx, req.Iid)
 
 		return InvoicePaymentResponse{paid}, err
 	}
 }
 
 type DeleteRequest struct {
-	iid string
+	Iid string
 }
 
 type DeleteResponse struct {
@@ -148,7 +148,7 @@ func MakeDeleteEndpoint(s InvoiceService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(DeleteRequest)
 
-		err := s.Delete(ctx, req.iid)
+		err := s.Delete(ctx, req.Iid)
 
 		return DeleteResponse{}, err
 	}
