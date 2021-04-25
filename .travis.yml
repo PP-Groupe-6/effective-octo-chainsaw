@@ -6,6 +6,7 @@ go:
 - 1.16
 
 before_install:
+  - chmod +x ./travis/before_install.bash
   - ./travis/before_install.bash
 
 os:
@@ -22,12 +23,14 @@ env:
 addons:
   sonarcloud:
     organization: "pp-groupe-6"
-    token: ${SONAR_TOKEN}
-    
+    token: ${SONAR_TOKEN
+
 before_script:
+  - chmod +x ./travis/before_script.bash
   - ./travis/before_script.bash
 
 script:
-  - go test -v ./account_microservice
-  - go test -v ./transaction_microservice
+  #- go test -v ./account_microservice
+  - go test -v ./transfer_microservice
+  - go test -v ./invoice_microservice
   - sonar-scanner

@@ -9,8 +9,12 @@
 			"path": "./account_microservice"
 		},
 		{
-			"name": "Transaction microservice",
-			"path": "./transaction_microservice"
+			"name": "Transfer microservice",
+			"path": "./transfer_microservice"
+		},
+		{
+			"name": "Invoice microservice",
+			"path": "./invoice_microservice"
 		}
 	],
 	"settings": {}

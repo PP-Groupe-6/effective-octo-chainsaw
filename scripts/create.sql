@@ -12,6 +12,7 @@ CREATE TABLE "account" (
 );
 
 
+
 DROP TABLE IF EXISTS "transfert";
 CREATE TABLE "transfert" (
 	"transfert_id" varchar(255) NOT NULL,
@@ -40,7 +41,6 @@ CREATE TABLE "invoice" (
 ) WITH (
   OIDS=FALSE
 );
-
 
 DROP TABLE IF EXISTS "invoice_state";
 CREATE TABLE "invoice_state" (
