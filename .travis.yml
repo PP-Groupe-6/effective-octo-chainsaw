@@ -23,7 +23,7 @@ env:
 addons:
   sonarcloud:
     organization: "pp-groupe-6"
-    token: ${SONAR_TOKEN}
+    token: ${SONAR_TOKEN
 
 before_script:
   - chmod +x ./travis/before_script.bash
