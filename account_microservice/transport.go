@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 
+	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/transport"
 	"github.com/gorilla/mux"
 
@@ -112,7 +112,7 @@ func codeFrom(err error) int {
 	switch err {
 	case ErrNotFound:
 		return http.StatusNotFound
-	case ErrNotAnId, ErrNotFound, ErrDifferentId:
+	case ErrNotAnId, ErrNotFound:
 		return http.StatusBadRequest
 	default:
 		return http.StatusInternalServerError
