@@ -7,6 +7,12 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
+const (
+	PENDING = 0
+	PAID    = 1
+	EXPIRED = 2
+)
+
 type TransferEndpoints struct {
 	GetTransferListEndpoint    endpoint.Endpoint
 	GetWaitingTransferEndpoint endpoint.Endpoint
@@ -28,7 +34,7 @@ type GetTransferListRequest struct {
 }
 
 type FormatedTransfer struct {
-	Type     string  `json:"ype"`
+	Type     string  `json:"type"`
 	Role     string  `json:"role"`
 	FullName string  `json:"name"`
 	Amount   float64 `json:"transactionAmount"`
@@ -117,13 +123,13 @@ func MakeGetWaitingTransferEndpoint(s TransferService) endpoint.Endpoint {
 }
 
 type CreateRequest struct {
-	emailAdressTransferPayer    string
-	emailAdressTransferReceiver string
-	transferAmount              float64
-	transferType                string
-	receiverQuestion            string
-	receiverAnswer              string
-	executionTransferDate       string
+	EmailAdressTransferPayer    string
+	EmailAdressTransferReceiver string
+	TransferAmount              float64
+	TransferType                string
+	ReceiverQuestion            string
+	ReceiverAnswer              string
+	ExecutionTransferDate       string
 }
 
 type CreateResponse struct {
@@ -133,37 +139,37 @@ type CreateResponse struct {
 func MakeCreateEndpoint(s TransferService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(CreateRequest)
-		idPayer, err := s.GetIdFromMail(ctx, req.emailAdressTransferPayer)
+		idPayer, err := s.GetIdFromMail(ctx, req.EmailAdressTransferPayer)
 		if err != nil {
 			return nil, err
 		}
-		idReceiver, err := s.GetIdFromMail(ctx, req.emailAdressTransferReceiver)
+		idReceiver, err := s.GetIdFromMail(ctx, req.EmailAdressTransferReceiver)
 		if err != nil {
 			return nil, err
 		}
 		var date string
-		if req.transferType == "instant" {
+		if req.TransferType == "instant" {
 			date = time.Now().Format("2006-01-02")
-		} else if req.transferType == "scheduled" {
-			date = req.executionTransferDate
+		} else if req.TransferType == "scheduled" {
+			date = req.ExecutionTransferDate
 		}
 		toAdd := Transfer{
 			ID:                "",
-			Type:              req.transferType,
+			Type:              req.TransferType,
 			State:             0,
-			Amount:            req.transferAmount,
+			Amount:            req.TransferAmount,
 			AccountPayerId:    idPayer,
 			AccountReceiverId: idReceiver,
-			ReceiverQuestion:  req.receiverQuestion,
-			ReceiverAnswer:    req.receiverAnswer,
+			ReceiverQuestion:  req.ReceiverQuestion,
+			ReceiverAnswer:    req.ReceiverAnswer,
 			ExecutionDate:     date,
 		}
 
 		transfer, err := s.Create(ctx, toAdd)
 		if (err == nil && transfer != Transfer{}) {
-			return true, nil
+			return CreateResponse{true}, nil
 		} else {
-			return false, err
+			return CreateResponse{false}, err
 		}
 	}
 }
@@ -182,10 +188,22 @@ func MakePostTransferStatusEndpoint(s TransferService) endpoint.Endpoint {
 		res, err := s.PostTransferStatus(ctx, req.ID)
 
 		if err == nil && res {
-			return true, nil
+			return PostTransferStatusResponse{res}, nil
 		} else {
-			return false, err
+			return PostTransferStatusResponse{res}, err
 		}
 
 	}
+}
+
+func StateToString(stateID int) string {
+	switch stateID {
+	case PENDING:
+		return "Pending"
+	case PAID:
+		return "Paid"
+	case EXPIRED:
+		return "Expired"
+	}
+	return ""
 }

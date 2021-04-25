@@ -6,12 +6,6 @@ import (
 	"fmt"
 )
 
-const (
-	PENDING = 0
-	PAID    = 1
-	EXPIRED = 2
-)
-
 type TransferService interface {
 	Create(ctx context.Context, transfer Transfer) (Transfer, error)
 	Read(ctx context.Context, id string) (Transfer, error)
