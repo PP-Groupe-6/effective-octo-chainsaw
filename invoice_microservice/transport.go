@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/transport"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 
 	httptransport "github.com/go-kit/kit/transport/http"
 )
@@ -32,7 +34,7 @@ func MakeHTTPHandler(s InvoiceService, logger log.Logger) http.Handler {
 	// DELETE 	/invoices/		deletes the invoice corresponding to the given ID
 	// POST		/invoices/pay	tries to process the payment of the given invoice
 
-	r.Methods("GET").Path("/invoices/").Handler(httptransport.NewServer(
+	r.Methods("GET").Path("/invoices/{id}").Handler(httptransport.NewServer(
 		e.GetInvoiceListEndpoint,
 		decodeInvoiceListRequest,
 		encodeResponse,
@@ -60,13 +62,30 @@ func MakeHTTPHandler(s InvoiceService, logger log.Logger) http.Handler {
 		options...,
 	))
 
-	return r
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"POST", "GET", "OPTIONS"},
+		//AllowedHeaders: []string{"Content-Type", "Accept", "Accept-Encoding", "Authorization"},
+		AllowedHeaders: []string{"*"},
+		// Enable Debugging for testing, consider disabling in production
+		Debug: true,
+	})
+
+	handler := c.Handler(r)
+
+	return handler
 }
 
 func decodeInvoiceListRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	var req GetInvoiceListRequest
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
+	vars := mux.Vars(r)
+	createdBy, _ := strconv.ParseBool(r.URL.Query().Get("CreatedBy"))
+	idparam, ok := vars["id"]
+	if !ok {
+		return nil, ErrBadRouting
+	}
+	var req = GetInvoiceListRequest{
+		idparam,
+		createdBy,
 	}
 	return req, nil
 }
@@ -80,7 +99,7 @@ func decodeAddRequest(_ context.Context, r *http.Request) (request interface{}, 
 }
 
 func decodePayRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	var req DeleteRequest
+	var req InvoicePaymentRequest
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
@@ -88,7 +107,7 @@ func decodePayRequest(_ context.Context, r *http.Request) (request interface{}, 
 }
 
 func decodeDeleteRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	var req InvoicePaymentRequest
+	var req DeleteRequest
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
 	}
@@ -101,6 +120,8 @@ type errorer interface {
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	if e, ok := response.(errorer); ok && e.error() != nil {
 		// Not a Go kit transport error, but a business-logic error.
 		// Provide those as HTTP errors.
@@ -113,6 +134,8 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	if err == nil {
 		panic("encodeError with nil error")
 	}

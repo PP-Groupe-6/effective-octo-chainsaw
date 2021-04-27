@@ -2,6 +2,7 @@ package invoice_microservice
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 )
@@ -31,7 +32,7 @@ func MakeInvoiceEndpoints(s InvoiceService) InvoiceEndpoints {
 // Si created by est à true on retourne les invoices créées par le client si il est à false on retourne celles reçues par le client
 type GetInvoiceListRequest struct {
 	ClientID  string
-	createdBy bool
+	CreatedBy bool
 }
 
 type GetInvoiceListResponse struct {
@@ -39,43 +40,59 @@ type GetInvoiceListResponse struct {
 }
 
 type InvoiceResponseFormat struct {
-	Id           string  `json:"id"`
-	Amount       float32 `json:"amount"`
-	State        string  `json:"state"`
-	ExpDate      string  `json:"expDate"`
-	WithClientId string  `json:"withClientId"`
+	Name      string `json:"name"`
+	Mail      string `json:"mail"`
+	Phone     string `json:"phone"`
+	Amount    string `json:"amount"`
+	State     string `json:"state"`
+	ExpDate   string `json:"expDate"`
+	InvoiceID string `json:"InvoiceID"`
 }
 
 func MakeGetInvoiceListEndpoint(s InvoiceService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(GetInvoiceListRequest)
-		var invoicesRet []InvoiceResponseFormat
+		InvoicesRet := []InvoiceResponseFormat{}
 		invoices, err := s.GetInvoiceList(ctx, req.ClientID)
-
-		for _, invoice := range invoices {
+		for _, Invoice := range invoices {
 			// Si on veut les invoice créées et que l'utilisateur est le récepteur de l'invoice
-			if req.createdBy && invoice.AccountReceiverId == req.ClientID {
-				invoicesRet = append(invoicesRet, InvoiceResponseFormat{
-					invoice.ID,
-					float32(invoice.Amount),
-					StateToString(invoice.State),
-					invoice.ExpirationDate,
-					invoice.AccountPayerId,
+			if req.CreatedBy && Invoice.AccountReceiverId == req.ClientID {
+				otherAccount, err := s.GetAccountInformation(ctx, Invoice.AccountPayerId)
+
+				if err != nil {
+					return GetInvoiceListResponse{InvoicesRet}, err
+				}
+
+				InvoicesRet = append(InvoicesRet, InvoiceResponseFormat{
+					otherAccount.Name + " " + otherAccount.Surname,
+					otherAccount.Mail,
+					otherAccount.Phone,
+					fmt.Sprint(Invoice.Amount),
+					StateToString(Invoice.State),
+					Invoice.ExpirationDate,
+					Invoice.ID,
 				})
 			}
 			// Si on veut les invoice reçues et que l'utilisateur et le payeur de l'invoice
-			if !req.createdBy && invoice.AccountPayerId == req.ClientID {
-				invoicesRet = append(invoicesRet, InvoiceResponseFormat{
-					invoice.ID,
-					float32(invoice.Amount),
-					StateToString(invoice.State),
-					invoice.ExpirationDate,
-					invoice.AccountReceiverId,
+			if !req.CreatedBy && Invoice.AccountPayerId == req.ClientID {
+				otherAccount, err := s.GetAccountInformation(ctx, Invoice.AccountReceiverId)
+
+				if err != nil {
+					return GetInvoiceListResponse{InvoicesRet}, err
+				}
+
+				InvoicesRet = append(InvoicesRet, InvoiceResponseFormat{
+					otherAccount.Name + " " + otherAccount.Surname,
+					otherAccount.Mail,
+					otherAccount.Phone,
+					fmt.Sprint(Invoice.Amount),
+					StateToString(Invoice.State),
+					Invoice.ExpirationDate,
+					Invoice.ID,
 				})
 			}
 		}
-
-		return GetInvoiceListResponse{invoicesRet}, err
+		return GetInvoiceListResponse{InvoicesRet}, err
 	}
 }
 
@@ -111,7 +128,7 @@ func MakeAddEndpoint(s InvoiceService) endpoint.Endpoint {
 
 		_, err = s.Create(ctx, i)
 
-		if err != nil {
+		if err == nil {
 			return AddResponse{true}, nil
 		} else {
 			return nil, err
@@ -142,6 +159,7 @@ type DeleteRequest struct {
 }
 
 type DeleteResponse struct {
+	Deleted bool `json:"deleted"`
 }
 
 func MakeDeleteEndpoint(s InvoiceService) endpoint.Endpoint {
@@ -150,7 +168,11 @@ func MakeDeleteEndpoint(s InvoiceService) endpoint.Endpoint {
 
 		err := s.Delete(ctx, req.Iid)
 
-		return DeleteResponse{}, err
+		if err != nil {
+			return DeleteResponse{false}, err
+		} else {
+			return DeleteResponse{true}, nil
+		}
 	}
 }
 

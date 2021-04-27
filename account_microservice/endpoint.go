@@ -2,7 +2,7 @@ package account_microservice
 
 import (
 	"context"
-	"strconv"
+	"fmt"
 	"strings"
 
 	"github.com/go-kit/kit/endpoint"
@@ -29,7 +29,7 @@ type GetAmountRequest struct {
 }
 
 type GetAmountResponse struct {
-	AccountAmount float32 `json:"amount"`
+	AccountAmount string `json:"amount"`
 }
 
 func MakeGetAmountEndpoint(s AccountService) endpoint.Endpoint {
@@ -37,7 +37,7 @@ func MakeGetAmountEndpoint(s AccountService) endpoint.Endpoint {
 		req := request.(GetAmountRequest)
 		amount, err := s.GetAmountForID(ctx, req.ClientID)
 
-		return GetAmountResponse{float32(amount)}, err
+		return GetAmountResponse{fmt.Sprint(amount)}, err
 	}
 }
 
@@ -63,32 +63,32 @@ func MakeGetUserInformationEndpoint(s AccountService) endpoint.Endpoint {
 type AddRequest struct {
 	ClientID    string
 	FullName    string
-	PhoneNumber int
+	PhoneNumber string
 	MailAdress  string
 }
 
 type AddResponse struct {
-	Added bool `json:"added"`
+	Account Account `json:"client"`
 }
 
 func MakeAddEndpoint(s AccountService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(AddRequest)
 		sepName := strings.Split(req.FullName, " ")
-		phone := strconv.Itoa(req.PhoneNumber)
 		toAdd := Account{
 			req.ClientID,
 			sepName[0],
 			sepName[1],
-			phone,
+			req.PhoneNumber,
 			req.MailAdress,
 			0,
 		}
 		account, err := s.Add(ctx, toAdd)
+		formatedName := account.Surname + " " + account.Name
 		if (err == nil && account != Account{}) {
-			return true, nil
+			return GetUserInformationResponse{formatedName, account.MailAdress, account.PhoneNumber}, nil
 		} else {
-			return false, err
+			return GetUserInformationResponse{formatedName, account.MailAdress, account.PhoneNumber}, err
 		}
 	}
 }

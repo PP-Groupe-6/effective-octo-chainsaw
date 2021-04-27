@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"github.com/rs/xid"
 )
 
 type TransferService interface {
@@ -29,37 +31,47 @@ var (
 	ErrNoInsert        = errors.New("insert did not go through")
 	ErrInconsistentIDs = errors.New("could not access database")
 	ErrNotEnoughMoney  = errors.New("payer account has not enough money")
+	ErrIDNotFound      = errors.New("could not find id linked to mail")
 )
 
 type transferService struct {
-	DbInfos dbConnexionInfo
+	DbInfos DbConnexionInfo
 }
 
-func NewTransferService(dbinfos dbConnexionInfo) TransferService {
+func NewTransferService(dbinfos DbConnexionInfo) TransferService {
 	return &transferService{
 		DbInfos: dbinfos,
 	}
 }
 func (s *transferService) PostTransferStatus(ctx context.Context, id string) (bool, error) {
+	fmt.Print("ID of transfer to process : " + id)
 	if id == "" {
 		return false, ErrNotAnId
 	}
 
-	TransferToPay, _ := s.Read(ctx, id)
+	TransferToPay, errorR := s.Read(ctx, id)
 
-	if (TransferToPay == Transfer{}) {
+	if (TransferToPay == Transfer{} && errorR != nil) {
 		return false, ErrNotFound
 	}
+
 	db := GetDbConnexion(s.DbInfos)
+
 	// Dans un premier temps on récupère le solde du payeur
 	payerBalance := float64(0.0)
-	errPB := db.Get(&payerBalance, "SELECT amount FROM account WHERE client_id=$1", TransferToPay.AccountPayerId)
+
+	errPB := db.Get(&payerBalance, "SELECT account_amount FROM account WHERE client_id=$1", TransferToPay.AccountPayerId)
 
 	// On récupère ensuite le solde du receveur
 	recieverBalance := float64(0.0)
-	errRB := db.Get(&payerBalance, "SELECT amount FROM account WHERE client_id=$1", TransferToPay.AccountReceiverId)
+	errRB := db.Get(&recieverBalance, "SELECT account_amount FROM account WHERE client_id=$1", TransferToPay.AccountReceiverId)
 
-	if errPB != nil || errRB != nil {
+	if errPB != nil {
+		fmt.Println("Payer balance error")
+		return false, ErrNotFound
+	}
+	if errRB != nil {
+		fmt.Println("Reciever balance error")
 		return false, ErrNotFound
 	}
 
@@ -70,20 +82,26 @@ func (s *transferService) PostTransferStatus(ctx context.Context, id string) (bo
 
 	tx := db.MustBegin()
 	// On mets à jour le solde du payeur
+	newPayerBalance := payerBalance - TransferToPay.Amount
+	fmt.Print("Previous balance : " + fmt.Sprint(payerBalance) + " new balance : " + fmt.Sprint(newPayerBalance))
 	resPayer := tx.MustExec("UPDATE account SET account_amount = '"+fmt.Sprint(payerBalance-TransferToPay.Amount)+"' WHERE client_id=$1", TransferToPay.AccountPayerId)
 
 	if rows, errUpdate := resPayer.RowsAffected(); rows != 1 {
 		tx.Rollback()
 		return false, errUpdate
 	}
+
 	// On mets à jour le solde du receveur
-	resReciever := tx.MustExec("UPDATE account SET account_amount = '"+fmt.Sprint(recieverBalance+TransferToPay.Amount)+"' WHERE client_id=$1", TransferToPay.AccountPayerId)
+	newReceiverBalance := recieverBalance + TransferToPay.Amount
+	fmt.Print("Previous balance : " + fmt.Sprint(recieverBalance) + " new balance : " + fmt.Sprint(newReceiverBalance))
+	resReciever := tx.MustExec("UPDATE account SET account_amount = '"+fmt.Sprint(newReceiverBalance)+"' WHERE client_id=$1", TransferToPay.AccountReceiverId)
 	if rows, errUpdate := resReciever.RowsAffected(); rows != 1 {
 		tx.Rollback()
 		return false, errUpdate
 	}
+
 	//On change l'état de la facture a payer
-	resInvoice := tx.MustExec("UPDATE transfer SET transfer_state = '"+fmt.Sprint(PAID)+"' WHERE transfer_id=$1", TransferToPay.ID)
+	resInvoice := tx.MustExec("UPDATE transfer SET transfer_state = "+fmt.Sprint(PAID)+" WHERE transfer_id=$1", TransferToPay.ID)
 	if rows, errUpdate := resInvoice.RowsAffected(); rows != 1 {
 		tx.Rollback()
 		return false, errUpdate
@@ -91,6 +109,7 @@ func (s *transferService) PostTransferStatus(ctx context.Context, id string) (bo
 
 	tx.Commit()
 	db.Close()
+
 	return true, nil
 }
 
@@ -99,12 +118,13 @@ func (s *transferService) GetIdFromMail(ctx context.Context, mail string) (strin
 
 	var res string
 
-	err := db.Get(&res, "SELECT client_id FROM account where mail_adress=$1", mail)
+	err := db.Get(&res, "SELECT client_id FROM account WHERE mail_adress=$1", mail)
+
 	if err != nil {
-		return "", ErrNotFound
+		return "", ErrIDNotFound
 	}
 
-	return res, err
+	return res, nil
 }
 
 func (s *transferService) GetAccountInformation(ctx context.Context, id string) (AccountInfo, error) {
@@ -127,7 +147,7 @@ func (s *transferService) UpdateTransferStatus(ctx context.Context, id string) e
 	db := GetDbConnexion(s.DbInfos)
 
 	tx := db.MustBegin()
-	tx.MustExec("UPDATE transfer SET transfer_type = '"+transfer.Type+"', transfer_state="+fmt.Sprint(transfer.State)+", transfer_amount ="+fmt.Sprint(transfer.Amount)+", account_transfer_payer_id = '"+transfer.AccountPayerId+"', account_transfer_receiver_id = '"+transfer.AccountReceiverId+"', receiver_question = '"+transfer.ReceiverQuestion+"', receiver_answer = '"+transfer.ReceiverAnswer+"', executed_transfer_date = '"+transfer.ExecutionDate+"' WHERE transfer_id=$1", id)
+	tx.MustExec("UPDATE transfer SET transfer_type = '"+transfer.Type+"', transfer_state="+fmt.Sprint(PAID)+", transfer_amount ="+fmt.Sprint(transfer.Amount)+", account_transfer_payer_id = '"+transfer.AccountPayerId+"', account_transfer_receiver_id = '"+transfer.AccountReceiverId+"', receiver_question = '"+transfer.ReceiverQuestion+"', receiver_answer = '"+transfer.ReceiverAnswer+"', executed_transfer_date = '"+transfer.ExecutionDate+"' WHERE transfer_id=$1", id)
 	tx.Commit()
 	db.Close()
 
@@ -137,7 +157,7 @@ func (s *transferService) UpdateTransferStatus(ctx context.Context, id string) e
 func (s *transferService) GetTransferList(ctx context.Context, id string) ([]*Transfer, error) {
 	db := GetDbConnexion(s.DbInfos)
 	transfers := make([]*Transfer, 0)
-	rows, err := db.Queryx("SELECT * FROM transfer WHERE account_transfer_payer_id=$1 OR account_transfer_receiver_id=$1", id)
+	rows, err := db.Queryx("SELECT * FROM transfer WHERE (account_transfer_payer_id=$1 OR account_transfer_receiver_id=$1) AND transfer_state !="+fmt.Sprint(PENDING), id)
 
 	for rows.Next() {
 		var t Transfer
@@ -156,7 +176,9 @@ func (s *transferService) GetWaitingTransfer(ctx context.Context, id string) ([]
 	db := GetDbConnexion(s.DbInfos)
 	transfers := make([]*Transfer, 0)
 
-	rows, err := db.Queryx("SELECT * FROM transfer WHERE account_transfer_receiver_id=$1 AND transfer_state=0", id)
+	fmt.Println("Receiver Id : " + id)
+
+	rows, err := db.Queryx("SELECT * FROM transfer WHERE account_transfer_receiver_id=$1 AND transfer_state="+fmt.Sprint(PENDING), id)
 
 	for rows.Next() {
 		var t Transfer
@@ -179,12 +201,14 @@ func (s *transferService) Create(ctx context.Context, transfer Transfer) (Transf
 	if testID, _ := s.Read(ctx, transfer.ID); (testID != Transfer{}) {
 		return Transfer{}, ErrAlreadyExist
 	}
+	id := xid.New()
 	db := GetDbConnexion(s.DbInfos)
+	transfer.ID = id.String()
 
 	//validations
 
 	tx := db.MustBegin()
-	res := tx.MustExec("INSERT INTO transfer VALUES ('" + transfer.ID + "','" + transfer.Type + "'," + fmt.Sprint(transfer.State) + "," + fmt.Sprint(transfer.Amount) + ",'" + transfer.AccountPayerId + "','" + transfer.AccountReceiverId + "','" + transfer.ReceiverQuestion + "','" + transfer.ReceiverAnswer + "','" + transfer.ExecutionDate + "')")
+	res := tx.MustExec("INSERT INTO transfer VALUES ('" + id.String() + "','" + transfer.Type + "'," + fmt.Sprint(transfer.State) + "," + fmt.Sprint(transfer.Amount) + ",'" + transfer.AccountPayerId + "','" + transfer.AccountReceiverId + "','" + transfer.ReceiverQuestion + "','" + transfer.ReceiverAnswer + "','" + transfer.ExecutionDate + "')")
 	tx.Commit()
 	db.Close()
 
@@ -195,7 +219,12 @@ func (s *transferService) Create(ctx context.Context, transfer Transfer) (Transf
 		return Transfer{}, ErrNoInsert
 	}
 
-	return s.Read(ctx, transfer.ID)
+	inserted, err := s.Read(ctx, transfer.ID)
+	if err != nil {
+		return Transfer{}, err
+	}
+
+	return inserted, nil
 
 }
 

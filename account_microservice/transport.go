@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/transport"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 
 	httptransport "github.com/go-kit/kit/transport/http"
 )
@@ -31,14 +33,14 @@ func MakeHTTPHandler(s AccountService, logger log.Logger) http.Handler {
 	// GET		/users/ 		returns the informations of the param account
 	// POST 	/users/			adds a user
 
-	r.Methods("GET").Path("/amount/").Handler(httptransport.NewServer(
+	r.Methods("GET").Path("/amount/{id}").Handler(httptransport.NewServer(
 		e.GetAmountEndpoint,
 		decodeAmountRequest,
 		encodeResponse,
 		options...,
 	))
 
-	r.Methods("GET").Path("/users/").Handler(httptransport.NewServer(
+	r.Methods("GET").Path("/users/{id}").Handler(httptransport.NewServer(
 		e.GetUserInformationEndpoint,
 		decodeUserInformationRequest,
 		encodeResponse,
@@ -52,7 +54,18 @@ func MakeHTTPHandler(s AccountService, logger log.Logger) http.Handler {
 		options...,
 	))
 
-	return r
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{"POST", "GET", "OPTIONS"},
+		//AllowedHeaders: []string{"Content-Type", "Accept", "Accept-Encoding", "Authorization"},
+		AllowedHeaders: []string{"*"},
+		// Enable Debugging for testing, consider disabling in production
+		Debug: true,
+	})
+
+	handler := c.Handler(r)
+
+	return handler
 }
 
 type errorer interface {
@@ -60,14 +73,17 @@ type errorer interface {
 }
 
 func decodeAmountRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	var req GetAmountRequest
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
+	fmt.Println("Recieved amount request")
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		return nil, ErrBadRouting
 	}
-	return req, nil
+	return GetAmountRequest{ClientID: id}, nil
 }
 
 func decodeAddRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
+	fmt.Println("Recieved add request")
 	var req AddRequest
 	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
 		return nil, e
@@ -76,16 +92,19 @@ func decodeAddRequest(_ context.Context, r *http.Request) (request interface{}, 
 }
 
 func decodeUserInformationRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	var req GetUserInformationRequest
-
-	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
-		return nil, e
+	fmt.Println("Recieved user info request")
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		return nil, ErrBadRouting
 	}
-	return req, nil
+	return GetUserInformationRequest{ClientID: id}, nil
 }
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	if e, ok := response.(errorer); ok && e.error() != nil {
 		// Not a Go kit transport error, but a business-logic error.
 		// Provide those as HTTP errors.
@@ -98,6 +117,8 @@ func encodeResponse(ctx context.Context, w http.ResponseWriter, response interfa
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 	if err == nil {
 		panic("encodeError with nil error")
 	}

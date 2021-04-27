@@ -2,15 +2,10 @@ package transfer_microservice
 
 import (
 	"context"
-	"time"
+	"fmt"
+	"strconv"
 
 	"github.com/go-kit/kit/endpoint"
-)
-
-const (
-	PENDING = 0
-	PAID    = 1
-	EXPIRED = 2
 )
 
 type TransferEndpoints struct {
@@ -34,11 +29,11 @@ type GetTransferListRequest struct {
 }
 
 type FormatedTransfer struct {
-	Type     string  `json:"type"`
-	Role     string  `json:"role"`
-	FullName string  `json:"name"`
-	Amount   float64 `json:"transactionAmount"`
-	Date     string  `json:"transactionDate"`
+	Type     string `json:"type"`
+	Role     string `json:"role"`
+	FullName string `json:"name"`
+	Amount   string `json:"transactionAmount"`
+	Date     string `json:"transactionDate"`
 }
 
 type GetTransferListResponse struct {
@@ -61,7 +56,7 @@ func MakeGetTransferListEndpoint(s TransferService) endpoint.Endpoint {
 		for _, transfer := range transfers {
 			response = append(response, FormatedTransfer{
 				Type:     "transfer",
-				Amount:   transfer.Amount,
+				Amount:   fmt.Sprint(transfer.Amount),
 				FullName: formatedName,
 				Date:     transfer.ExecutionDate,
 			})
@@ -82,12 +77,12 @@ type GetWaitingTransferRequest struct {
 }
 
 type FormatedWaitingTransfer struct {
-	ID               string  `json:"transferId"`
-	Mail             string  `json:"mailAdressTransferPayer"`
-	Amount           float64 `json:"transferAmount"`
-	ExecutionDate    string  `json:"executionTransferDate"`
-	ReceiverQuestion string  `json:"receiverQuestion"`
-	ReceiverAnswer   string  `json:"receiverAnswer"`
+	ID               string `json:"transferId"`
+	Mail             string `json:"mailAdressTransferPayer"`
+	Amount           string `json:"transferAmount"`
+	ExecutionDate    string `json:"executionTransferDate"`
+	ReceiverQuestion string `json:"receiverQuestion"`
+	ReceiverAnswer   string `json:"receiverAnswer"`
 }
 
 type GetWaitingTransferListResponse struct {
@@ -97,21 +92,22 @@ type GetWaitingTransferListResponse struct {
 func MakeGetWaitingTransferEndpoint(s TransferService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(GetWaitingTransferRequest)
-		transfers, err := s.GetTransferList(ctx, req.ClientID)
+		transfers, err := s.GetWaitingTransfer(ctx, req.ClientID)
 		if err != nil {
 			return nil, err
 		}
-		accountInfo, err := s.GetAccountInformation(ctx, req.ClientID)
-		if err != nil {
-			return nil, err
-		}
+
 		response := make([]FormatedWaitingTransfer, 0)
 
 		for _, transfer := range transfers {
+			accountInfo, err := s.GetAccountInformation(ctx, transfer.AccountPayerId)
+			if err != nil {
+				return nil, err
+			}
 			response = append(response, FormatedWaitingTransfer{
 				ID:               transfer.ID,
 				Mail:             accountInfo.Mail,
-				Amount:           transfer.Amount,
+				Amount:           fmt.Sprint(transfer.Amount),
 				ExecutionDate:    transfer.ExecutionDate,
 				ReceiverQuestion: transfer.ReceiverQuestion,
 				ReceiverAnswer:   transfer.ReceiverAnswer,
@@ -123,59 +119,73 @@ func MakeGetWaitingTransferEndpoint(s TransferService) endpoint.Endpoint {
 }
 
 type CreateRequest struct {
-	EmailAdressTransferPayer    string
-	EmailAdressTransferReceiver string
-	TransferAmount              float64
-	TransferType                string
-	ReceiverQuestion            string
-	ReceiverAnswer              string
-	ExecutionTransferDate       string
+	MailAdressTransferPayer    string
+	MailAdressTransferReceiver string
+	TransferAmount             string
+	TransferType               string
+	ReceiverQuestion           string
+	ReceiverAnswer             string
+	ExecutionTransferDate      string
 }
 
 type CreateResponse struct {
-	Added bool `json:"added"`
+	Type                        string `json:"transferType,omitempty"`
+	Amount                      string `json:"transferAmount,omitempty"`
+	EmailAdressTransferPayer    string `json:"mailAdressTransferPayer,omitempty"`
+	EmailAdressTransferReceiver string `json:"mailAdressTransferReceiver,omitempty"`
+	ReceiverQuestion            string `json:"receiverQuestion,omitempty"`
+	ReceiverAnswer              string `json:"receiverAnswer,omitempty"`
+	ExecutionTransferDate       string `json:"executionTransferDate,omitempty"`
 }
 
 func MakeCreateEndpoint(s TransferService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(CreateRequest)
-		idPayer, err := s.GetIdFromMail(ctx, req.EmailAdressTransferPayer)
+		fmt.Println(req.ExecutionTransferDate)
+		idPayer, err := s.GetIdFromMail(ctx, req.MailAdressTransferPayer)
 		if err != nil {
+			fmt.Println("Payer ID not found")
 			return nil, err
 		}
-		idReceiver, err := s.GetIdFromMail(ctx, req.EmailAdressTransferReceiver)
+		idReceiver, err := s.GetIdFromMail(ctx, req.MailAdressTransferReceiver)
 		if err != nil {
+			fmt.Print("Reciever ID not found")
 			return nil, err
 		}
-		var date string
-		if req.TransferType == "instant" {
-			date = time.Now().Format("2006-01-02")
-		} else if req.TransferType == "scheduled" {
-			date = req.ExecutionTransferDate
-		}
+
+		amount, _ := strconv.ParseFloat(req.TransferAmount, 64)
+
 		toAdd := Transfer{
 			ID:                "",
 			Type:              req.TransferType,
 			State:             0,
-			Amount:            req.TransferAmount,
+			Amount:            amount,
 			AccountPayerId:    idPayer,
 			AccountReceiverId: idReceiver,
 			ReceiverQuestion:  req.ReceiverQuestion,
 			ReceiverAnswer:    req.ReceiverAnswer,
-			ExecutionDate:     date,
+			ExecutionDate:     req.ExecutionTransferDate,
 		}
 
 		transfer, err := s.Create(ctx, toAdd)
 		if (err == nil && transfer != Transfer{}) {
-			return CreateResponse{true}, nil
+			return CreateResponse{
+				transfer.Type,
+				fmt.Sprint(transfer.Amount),
+				req.MailAdressTransferPayer,
+				req.MailAdressTransferReceiver,
+				transfer.ReceiverQuestion,
+				transfer.ReceiverAnswer,
+				transfer.ExecutionDate,
+			}, nil
 		} else {
-			return CreateResponse{false}, err
+			return CreateResponse{}, err
 		}
 	}
 }
 
 type PostTransferStatusRequest struct {
-	ID string `json:"transfer_id"`
+	TransferId string
 }
 
 type PostTransferStatusResponse struct {
@@ -185,7 +195,7 @@ type PostTransferStatusResponse struct {
 func MakePostTransferStatusEndpoint(s TransferService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(PostTransferStatusRequest)
-		res, err := s.PostTransferStatus(ctx, req.ID)
+		res, err := s.PostTransferStatus(ctx, req.TransferId)
 
 		if err == nil && res {
 			return PostTransferStatusResponse{res}, nil

@@ -17,14 +17,14 @@ type AccountService interface {
 
 // Structure représentant l'instance du service
 type accountService struct {
-	DbInfos dbConnexionInfo
+	DbInfos DbConnexionInfo
 }
 
 // Déclaration des différentes erreurs de la couche service
 var (
 	ErrNotAnId           = errors.New("not an ID")
 	ErrNoAccount         = errors.New("account param is empty")
-	ErrNotFound          = errors.New("account not found not found")
+	ErrNotFound          = errors.New("account not found")
 	ErrNoDb              = errors.New("could not access database")
 	ErrInconsistentIDs   = errors.New("inconsistent IDs during account update")
 	ErrNoInsert          = errors.New("insert did not go through")
@@ -32,7 +32,7 @@ var (
 )
 
 // Fonction permettant d'instancer le service
-func NewAccountService(dbinfos dbConnexionInfo) AccountService {
+func NewAccountService(dbinfos DbConnexionInfo) AccountService {
 	s := &accountService{
 		dbinfos,
 	}
@@ -51,7 +51,7 @@ func (s *accountService) GetAccountByID(ctx context.Context, id string) (Account
 	err := db.Get(&res, "SELECT * FROM account WHERE client_id=$1", id)
 
 	if err != nil {
-		return Account{}, err
+		return Account{}, ErrNotFound
 	}
 
 	return res, nil
@@ -67,6 +67,8 @@ func (s *accountService) Add(ctx context.Context, account Account) (Account, err
 	}
 
 	db := GetDbConnexion(s.DbInfos)
+
+	account.AccountAmount = 2000
 
 	tx := db.MustBegin()
 	res := tx.MustExec("INSERT INTO account VALUES ('" + account.ClientID + "','" + account.Name + "','" + account.Surname + "','" + account.PhoneNumber + "','" + account.MailAdress + "'," + fmt.Sprint(account.AccountAmount) + ")")

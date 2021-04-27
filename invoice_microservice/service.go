@@ -13,9 +13,10 @@ type InvoiceService interface {
 	Read(ctx context.Context, id string) (Invoice, error)
 	Update(ctx context.Context, id string, invoice Invoice) (Invoice, error)
 	Delete(ctx context.Context, id string) error
-	GetInvoiceList(ctx context.Context, id string) ([]*Invoice, error)
+	GetInvoiceList(ctx context.Context, id string) ([]Invoice, error)
 	GetIdFromMail(ctx context.Context, mail string) (string, error)
 	PayInvoice(ctx context.Context, id string) (bool, error)
+	GetAccountInformation(ctx context.Context, id string) (AccountInfo, error)
 }
 
 var (
@@ -28,22 +29,23 @@ var (
 	ErrNoInsert            = errors.New("insert did not go through")
 	ErrInconsistentIDs     = errors.New("could not access database")
 	ErrInsufficientBalance = errors.New("payer's balance is to low to pay invoice")
+	ErrAccountNotFound     = errors.New("requested account was not found")
 )
 
 type invoiceService struct {
-	DbInfos dbConnexionInfo
+	DbInfos DbConnexionInfo
 }
 
-func NewInvoiceService(dbinfos dbConnexionInfo) InvoiceService {
+func NewInvoiceService(dbinfos DbConnexionInfo) InvoiceService {
 	return &invoiceService{
 		DbInfos: dbinfos,
 	}
 }
 
-func (s *invoiceService) GetInvoiceList(ctx context.Context, id string) ([]*Invoice, error) {
+func (s *invoiceService) GetInvoiceList(ctx context.Context, id string) ([]Invoice, error) {
 	db := GetDbConnexion(s.DbInfos)
 
-	invoices := make([]*Invoice, 0)
+	invoices := make([]Invoice, 0)
 	rows, err := db.Queryx("SELECT * FROM invoice WHERE account_invoice_payer_id=$1 OR account_invoice_receiver_id=$1", id)
 
 	for rows.Next() {
@@ -51,6 +53,8 @@ func (s *invoiceService) GetInvoiceList(ctx context.Context, id string) ([]*Invo
 		if err := rows.StructScan(&i); err != nil {
 			return nil, err
 		}
+
+		invoices = append(invoices, i)
 	}
 
 	if err != nil {
@@ -86,21 +90,22 @@ func (s *invoiceService) Create(ctx context.Context, invoice Invoice) (Invoice, 
 	}
 
 	invoice.ID = id.String()
+	inserted, _ := s.Read(ctx, invoice.ID)
 
-	return s.Read(ctx, invoice.ID)
+	return inserted, nil
 }
 
 func (s *invoiceService) Read(ctx context.Context, id string) (Invoice, error) {
 	db := GetDbConnexion(s.DbInfos)
 
-	res := Invoice{}
-	err := db.Get(&res, "SELECT * FROM invoice WHERE invoice_id=$1", id)
+	Res := Invoice{}
+	err := db.Get(&Res, "SELECT * FROM invoice WHERE invoice_id=$1", id)
 
 	if err != nil {
 		return Invoice{}, err
 	}
 
-	return res, nil
+	return Res, nil
 }
 
 func (s *invoiceService) Update(ctx context.Context, id string, invoice Invoice) (Invoice, error) {
@@ -165,9 +170,9 @@ func (s *invoiceService) PayInvoice(ctx context.Context, id string) (bool, error
 		return false, ErrNotAnId
 	}
 
-	InvoiceToPay, _ := s.Read(ctx, id)
+	InvoiceToPay, errorR := s.Read(ctx, id)
 
-	if (InvoiceToPay == Invoice{}) {
+	if (InvoiceToPay == Invoice{} && errorR != nil) {
 		return false, ErrNotFound
 	}
 
@@ -175,14 +180,20 @@ func (s *invoiceService) PayInvoice(ctx context.Context, id string) (bool, error
 
 	// Dans un premier temps on récupère le solde du payeur
 	payerBalance := float64(0.0)
-	errPB := db.Get(&payerBalance, "SELECT amount FROM account WHERE client_id=$1", InvoiceToPay.AccountPayerId)
+
+	errPB := db.Get(&payerBalance, "SELECT account_amount FROM account WHERE client_id=$1", InvoiceToPay.AccountPayerId)
 
 	// On récupère ensuite le solde du receveur
-	recieverBalance := float64(0.0)
-	errRB := db.Get(&payerBalance, "SELECT amount FROM account WHERE client_id=$1", InvoiceToPay.AccountReceiverId)
+	receiverBalance := float64(0.0)
+	errRB := db.Get(&receiverBalance, "SELECT account_amount FROM account WHERE client_id=$1", InvoiceToPay.AccountReceiverId)
 
-	if errPB != nil || errRB != nil {
-		return false, ErrNotFound
+	if errPB != nil {
+		fmt.Println("Payer balance error")
+		return false, ErrAccountNotFound
+	}
+	if errRB != nil {
+		fmt.Println("Reciever balance error")
+		return false, ErrAccountNotFound
 	}
 
 	// On regarde si le payeur a les fonds pour payer la facture
@@ -192,7 +203,9 @@ func (s *invoiceService) PayInvoice(ctx context.Context, id string) (bool, error
 
 	tx := db.MustBegin()
 	// On mets à jour le solde du payeur
-	resPayer := tx.MustExec("UPDATE account SET account_amount = '"+fmt.Sprint(payerBalance-InvoiceToPay.Amount)+"' WHERE client_id=$1", InvoiceToPay.AccountPayerId)
+	newPayerBalance := payerBalance - InvoiceToPay.Amount
+	fmt.Print("Previous balance : " + fmt.Sprint(payerBalance) + " new balance : " + fmt.Sprint(newPayerBalance))
+	resPayer := tx.MustExec("UPDATE account SET account_amount = '"+fmt.Sprint(newPayerBalance)+"' WHERE client_id=$1", InvoiceToPay.AccountPayerId)
 
 	if rows, errUpdate := resPayer.RowsAffected(); rows != 1 {
 		tx.Rollback()
@@ -200,7 +213,9 @@ func (s *invoiceService) PayInvoice(ctx context.Context, id string) (bool, error
 	}
 
 	// On mets à jour le solde du receveur
-	resReciever := tx.MustExec("UPDATE account SET account_amount = '"+fmt.Sprint(recieverBalance+InvoiceToPay.Amount)+"' WHERE client_id=$1", InvoiceToPay.AccountPayerId)
+	newReceiverBalance := receiverBalance + InvoiceToPay.Amount
+	fmt.Print("Previous balance : " + fmt.Sprint(receiverBalance) + " new balance : " + fmt.Sprint(newReceiverBalance))
+	resReciever := tx.MustExec("UPDATE account SET account_amount = '"+fmt.Sprint(newReceiverBalance)+"' WHERE client_id=$1", InvoiceToPay.AccountReceiverId)
 	if rows, errUpdate := resReciever.RowsAffected(); rows != 1 {
 		tx.Rollback()
 		return false, errUpdate
@@ -217,4 +232,16 @@ func (s *invoiceService) PayInvoice(ctx context.Context, id string) (bool, error
 	db.Close()
 
 	return true, nil
+}
+
+func (s *invoiceService) GetAccountInformation(ctx context.Context, id string) (AccountInfo, error) {
+	db := GetDbConnexion(s.DbInfos)
+
+	res := AccountInfo{}
+	err := db.Get(&res, "SELECT name, surname, mail_adress, phone_number, account_amount FROM account where client_id=$1", id)
+
+	if err != nil {
+		return AccountInfo{}, err
+	}
+	return res, err
 }
